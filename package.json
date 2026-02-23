@@ -1,0 +1,42 @@
+{
+  "name": "olx-search-cli",
+  "version": "1.0.0",
+  "description": "Extract structured data from OLX Brazil search results — no API key, no browser, no scraping.",
+  "keywords": [
+    "olx",
+    "search",
+    "scraper",
+    "extractor",
+    "cli",
+    "marketplace",
+    "classifieds",
+    "products"
+  ],
+  "license": "MIT",
+  "author": "Alpha System",
+  "type": "module",
+  "bin": {
+    "olx-search": "./bin/olx-search.js"
+  },
+  "main": "./lib/index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "readyup": "node readyup.js"
+  },
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  },
+  "updated": "2026.02.24.2120"
+}
