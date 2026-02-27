@@ -92,7 +92,7 @@ try {
     },
   });
 } catch (e) {
-  error(e.message);
+  error(`${e.message}\n  Run "olx-search --help" for usage info.`);
 }
 
 const { values: opts, positionals } = parsed;
@@ -146,6 +146,10 @@ const fields = opts.fields
 
 if (!["json", "table", "jsonl", "csv"].includes(format)) {
   error(`Unknown format "${format}". Supported: json, table, jsonl, csv`);
+}
+
+if (opts.sort && !["price_asc", "price_desc", "date", "relevance"].includes(opts.sort)) {
+  error(`Unknown --sort "${opts.sort}". Supported: price_asc, price_desc, date, relevance`);
 }
 
 if (!Number.isInteger(concurrency) || concurrency < 1) {
@@ -270,7 +274,7 @@ function output(items, result, fmt, pretty) {
  */
 function outputTable(items) {
   if (items.length === 0) {
-    console.log("No results found.");
+    console.log("Nenhum resultado encontrado.");
     return;
   }
 
@@ -286,7 +290,8 @@ function outputTable(items) {
 
   for (const [i, item] of items.entries()) {
     const num = dim(`${String(i + 1).padStart(2)}.`);
-    const title = bold((item.title || "").slice(0, 72));
+    const rawTitle = item.title || "";
+    const title = bold(rawTitle.length > 72 ? rawTitle.slice(0, 71) + "…" : rawTitle);
     const price = item.price != null ? green(`BRL ${item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`) : yellow("Preço não informado");
 
     let badges = "";
@@ -404,9 +409,6 @@ function generateHtml(result, items) {
 
     const locHtml = item.location ? `<p class="location">${esc(item.location)}</p>` : "";
     const dateHtml = item.date ? `<p class="date">${esc(fmtDate(item.date))}</p>` : "";
-    const sellerHtml = item.sellerName ? `<p class="seller">por ${esc(item.sellerName)}</p>` : "";
-
-    const propsHtml = item.properties?.length ? `<div class="props">${item.properties.map((p) => `<span class="prop">${esc(p.name)}: ${esc(p.value)}</span>`).join("")}</div>` : "";
 
     const descHtml = item.description ? `<p class="desc">${esc(item.description.replace(/\n+/g, " ").trim().slice(0, 200))}${item.description.replace(/\n+/g, " ").trim().length > 200 ? "\u2026" : ""}</p>` : "";
 
@@ -513,9 +515,6 @@ main{max-width:var(--page-max);margin:0 auto;padding:var(--main-pt) var(--main-p
 .orig{font-size:.76rem;color:var(--muted);text-decoration:line-through}
 .location{font-size:.72rem;color:var(--muted)}
 .date{font-size:.72rem;color:var(--muted)}
-.seller{font-size:.71rem;color:var(--muted)}
-.props{display:flex;flex-wrap:wrap;gap:.3rem}
-.prop{font-size:.67rem;color:var(--promo-c);border:1px solid color-mix(in srgb,var(--promo-c) 30%,transparent);border-radius:var(--rs);padding:.1rem .32rem;background:color-mix(in srgb,var(--promo-c) 8%,transparent)}
 .img-zone{display:flex;flex-direction:column}
 .gallery-strip{display:flex;gap:4px;padding:5px 6px;background:var(--surface-2);border-top:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .gallery-strip::-webkit-scrollbar{display:none}
@@ -567,7 +566,8 @@ footer a{color:inherit}
 .lb-nav:hover{background:rgba(255,255,255,.3)}
 .lb-prev{left:1rem}
 .lb-next{right:1rem}
-.lb-counter{color:rgba(255,255,255,.7);font-size:.8rem}`;
+.lb-counter{color:rgba(255,255,255,.7);font-size:.8rem}
+.skip{position:absolute;top:-100%;left:0;background:var(--accent);color:var(--accent-fg);padding:.5rem 1rem;z-index:200;font-weight:600;border-radius:0 0 var(--rs) 0;transition:top .15s;text-decoration:none;font-size:.85rem}.skip:focus{top:0}`;
 
   const js = `(function(){
   var root=document.documentElement,btn=document.getElementById('theme-btn');
@@ -725,6 +725,7 @@ footer a{color:inherit}
 <style>${css}</style>
 </head>
 <body>
+<a class="skip" href="#main-content">Pular para o conte\xFAdo</a>
 <header>
   <div class="h-left">
     <span class="logo">olx-search<em>.cli</em></span>
@@ -733,7 +734,7 @@ footer a{color:inherit}
       <span class="h-meta">${query.state ? `${query.state.toUpperCase()} \xB7 ` : ""}${total} resultado${pagination.total === 1 ? "" : "s"} \xB7 ${now}</span>
     </div>
   </div>
-  <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode"></button>
+  <button id="theme-btn" class="theme-btn" aria-label="Alternar tema claro/escuro"></button>
 </header>
 <div class="controls" data-initial-sort="${initialSort}">
   <div class="ctrl-search">
@@ -756,19 +757,19 @@ footer a{color:inherit}
     </div>
     <div class="anti-chips" id="anti-chips"></div>
   </div>
-  <span class="ctrl-count" id="ctrl-count"></span>
+  <span class="ctrl-count" id="ctrl-count" aria-live="polite"></span>
 </div>
-<main>
+<main id="main-content">
   <div class="grid">
 ${cardsHtml}
   </div>
 </main>
 <footer>Gerado por <strong>olx-search-cli</strong> &middot; Dados da <a href="https://www.olx.com.br" target="_blank" rel="noopener noreferrer">OLX</a></footer>
-<div class="lightbox" id="lightbox">
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galeria de imagens">
   <button class="lb-close" id="lb-close" aria-label="Fechar">&times;</button>
-  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Anterior">&#8249;</button>
-  <button class="lb-nav lb-next" id="lb-next" aria-label="Pr\xF3xima">&#8250;</button>
-  <img id="lb-img" src="" alt="">
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Foto anterior">&#8249;</button>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="Pr\xF3xima foto">&#8250;</button>
+  <img id="lb-img" src="" alt="Imagem ampliada">
   <span class="lb-counter" id="lb-counter"></span>
 </div>
 <script>${js}</script>
