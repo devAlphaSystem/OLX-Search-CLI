@@ -78,13 +78,39 @@ olx-search <query> [options]
 | `--timeout <ms>` | integer | `15000` | HTTP timeout per request. |
 | `--concurrency <n>` | integer | `5` | Parallel detail-page requests. |
 | `--strict` | flag | `false` | Keep only items matching all query tokens in title/description/properties. |
+| `--no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
 | `-f, --format <type>` | string | `json` | `json`, `table`, `jsonl`, `csv`. |
 | `--pretty` | flag | `false` | Pretty print JSON output. |
 | `--raw` | flag | `false` | Return raw `pageProps` object and exit. |
 | `--fields <list>` | csv string | none | Keep selected fields only. |
 | `-w, --web` | flag | `false` | Render HTML results and open browser. |
+| `--log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
+
+## Rate Limiting
+
+Built-in rate limiting is **enabled by default** to prevent your IP from being blocked by OLX.
+
+- **Page delay:** 200 ms between pagination requests
+- **Detail delay:** 100 ms between detail-enrichment batches
+- **Max concurrency:** 3 parallel detail requests (overrides `--concurrency` when lower)
+
+To disable rate limiting (at your own risk):
+
+```bash
+olx-search "notebook" --no-rate-limit
+```
+
+## Logging
+
+Pass `--log` to write a timestamped log file (`olx-search_YYYY-MM-DD_HH-MM-SS.log`) to the project root.
+The file records every HTTP request/response (URL, status code, content-type, body size), the constructed search URL, per-page parse counts, pagination progress, per-item detail-enrichment results, and the final summary.
+No file is created when `--log` is omitted.
+
+```bash
+olx-search "iphone 15" --log
+```
 
 ## Output Formats
 
@@ -163,6 +189,7 @@ Main options:
 - `state?: string` (single or comma-separated UFs)
 - `category?: string` (must exist in known slug map)
 - `strict?: boolean`
+- `noRateLimit?: boolean`
 
 #### `searchRaw(query, options?)`
 
