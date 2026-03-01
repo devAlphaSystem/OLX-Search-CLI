@@ -14,6 +14,7 @@ Command line and library tool to extract structured search results from OLX Braz
 
 - Node.js `>=18`
 - Network access to `www.olx.com.br`
+- [`nlcurl`](https://github.com/user/nlcurl) — Chrome TLS/HTTP2 fingerprint impersonation (bundled dependency)
 
 ## Installation
 
@@ -71,20 +72,23 @@ olx-search <query> [options]
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `-l, --limit <n>` | integer | `20` | Maximum number of results returned. |
-| `--sort <order>` | string | `relevance` | Sort order: `price_asc`, `price_desc`, `date`, `relevance`. |
-| `--state <uf[,uf...]>` | string | none | One or more Brazilian UFs, ex: `sp` or `rj,mg,sp`. |
-| `--category <slug>` | string | none | Category slug/path, ex: `celulares`, `informatica/notebooks`. |
-| `--list-categories` | flag | `false` | Print all known OLX category slugs and exit. |
-| `--timeout <ms>` | integer | `15000` | HTTP timeout per request. |
-| `--concurrency <n>` | integer | `5` | Parallel detail-page requests. |
-| `--strict` | flag | `false` | Keep only items matching all query tokens in title/description/properties. |
-| `--no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-s, --sort <order>` | string | `relevance` | Sort order: `price_asc`, `price_desc`, `date`, `relevance`. |
+| `-a, --state <uf[,uf...]>` | string | none | One or more Brazilian UFs, ex: `sp` or `rj,mg,sp`. |
+| `-g, --category <slug>` | string | none | Category slug/path, ex: `celulares`, `informatica/notebooks`. |
+| `-G, --list-categories` | flag | `false` | Print all known OLX category slugs and exit. |
+| `-t, --timeout <ms>` | integer | `15000` | HTTP timeout per request. |
+| `-n, --concurrency <n>` | integer | `5` | Parallel detail-page requests. |
+| `-S, --strict` | flag | `false` | Keep only items matching all query tokens in title/description/properties. |
+| `-d, --no-details` | flag | `false` | Skip detail enrichment requests (faster, returns only basic listing data — no description, attributes, or seller name). |
+| `-R, --no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-1, --save-on-first` | flag | `false` | Save the first HTTP response to the project root as `olx-first_<timestamp>.json` + `.html`. |
+| `-e, --save-on-error` | flag | `false` | Save any HTTP response that returns an error to the project root as `olx-error_<timestamp>.json` + `.html`. |
 | `-f, --format <type>` | string | `json` | `json`, `table`, `jsonl`, `csv`. |
-| `--pretty` | flag | `false` | Pretty print JSON output. |
-| `--raw` | flag | `false` | Return raw `pageProps` object and exit. |
-| `--fields <list>` | csv string | none | Keep selected fields only. |
+| `-p, --pretty` | flag | `false` | Pretty print JSON output. |
+| `-r, --raw` | flag | `false` | Return raw `pageProps` object and exit. |
+| `-F, --fields <list>` | csv string | none | Keep selected fields only. |
 | `-w, --web` | flag | `false` | Render HTML results and open browser. |
-| `--log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
+| `-L, --log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
 
@@ -105,7 +109,7 @@ olx-search "notebook" --no-rate-limit
 ## Logging
 
 Pass `--log` to write a timestamped log file (`olx-search_YYYY-MM-DD_HH-MM-SS.log`) to the project root.
-The file records every HTTP request/response (URL, status code, content-type, body size), the constructed search URL, per-page parse counts, pagination progress, per-item detail-enrichment results, and the final summary.
+The file records every HTTP request/response (URL, status code, content-type, body size), the constructed search URL, per-page parse counts, pagination progress, per-item detail-enrichment results, and a request count summary (total, page, and detail calls).
 No file is created when `--log` is omitted.
 
 ```bash
