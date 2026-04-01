@@ -1,6 +1,6 @@
 {
   "name": "olx-search-cli",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Extract structured data from OLX Brazil search results — no API key, no browser, no scraping.",
   "keywords": [
     "olx",
